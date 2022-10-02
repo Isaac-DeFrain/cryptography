@@ -28,7 +28,7 @@ def generators(n):
 def random_gen(n):
     gens = generators(n)
     if not gens:
-      raise ValueError('No generators of 𝐙/n𝐙')
+      raise ValueError(f'No multiplicative generators of 𝐙/{n}𝐙')
     else:
       i = random.randint(0, len(gens) - 1)
       return gens[i]
@@ -51,7 +51,7 @@ def discrete_log(x, y, n):
     if finish:
         return res
     else:
-        raise ValueError('{y} does not have a discrete log base {x} modulo {n}'.format(x=x, y=y, n=n))
+        raise ValueError(f'{y} does not have a discrete log base {x} modulo {n}')
 
 # check discrete logarithm
 # x = base
