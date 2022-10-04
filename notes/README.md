@@ -1,3 +1,17 @@
 # Notes
 
-Notes on crypto concepts and algortihms
+Notes on crypto concepts and algorithms
+
+## Group theory + number theory
+
+- [modular arithmetic](./modular_arithmetic.md)
+- [generators](./generators.md)
+
+## Cryptography
+
+- [symmetric crypto](./symmetric_crypto.md)
+- [public key crypto](./public_key_crypto.md)
+- [RSA](./rsa.md)
+- [elliptic curve crypto](./elliptic_curve_crypto.md)
+- [lattice-based crypto](./lattice_based_crypto.md)
+- [polynomial rings](./polynomial_rings.md)

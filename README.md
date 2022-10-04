@@ -1,3 +1,3 @@
 # Cryptography
 
-Notes and algorithm examples
+[Notes](./notes/) and [algorithm examples](./src/)
