@@ -1,21 +1,24 @@
 #! /usr/bin python3
 
+def sgn(x): 1 if x > 0 else -1
+
 # compute the GCD and Bezout coefficients
-def eea(r, n):
-    c1 = 1 if r > 0 else -1
-    c2 = 1 if n > 0 else -1
-    r = abs(r)
-    n = abs(n)
-    def aux(r, n):
-        if r > n: aux(n, r)
-        if r % n == 0: return n, 0, 1
-        gcd, a1, b1 = aux(n % r, r)
-        a = b1 - (n // r) * a1
-        b = a1
+def eea(x, y):
+    if x == 0 or y == 0: raise ValueError("EEA only works on nonzero integers")
+    cx, cy = sgn(x), sgn(y)
+    x, y = abs(x), abs(y)
+    def aux(x, y):
+        if x > y: aux(y, x)
+        if x % y == 0: return y, 0, 1
+        gcd, _a, _b = aux(y % x, x)
+        a = _b - (y // x) * _a
+        b = _a
         return gcd, a, b
-    gcd, a, b = aux(r, n)
-    return gcd, c1 * a, c2 * b
+    gcd, _a, _b = aux(x, y)
+    a = cx * _a
+    b = cy * _b
+    return gcd, a, b
 
 # check the GCD and Bezout coefficients for x, y
-def check(a, b, x, y, gcd):
+def check(a, x, b, y, gcd):
     return gcd == a * x + b * y

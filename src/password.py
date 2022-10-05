@@ -11,8 +11,8 @@ hash = lambda x: pbkdf2_hmac('sha256', x, salt, 100_000)
 # get a confirmed password within 5 attempts
 attempts = 5
 while attempts >= 0:
-    p = hash(bytes(getpass('Password: '), encoding='utf8'))
-    q = hash(bytes(getpass('Confirm: '), encoding='utf8'))
+    p = hash(bytes(getpass('Password: '), 'utf-8'))
+    q = hash(bytes(getpass('Confirm: '), 'utf-8'))
     if p != q:
         if attempts == 1:
             print('Password mismatch. Try again. You have %s remaining attempt.' % attempts)
@@ -26,5 +26,4 @@ while attempts >= 0:
         break
 
 def guess():
-    g = hash(bytes(getpass('Guess: '), encoding='utf8'))
-    return g == p
+    return p == hash(bytes(getpass('Guess: '), 'utf-8'))

@@ -1,48 +1,7 @@
 #!/usr/bin python3
 
-import hashlib
+from utils import *
 from elliptic_curve import *
-from os import urandom
-from Crypto.Cipher import AES
-# from Crypto import Random
-from base64 import b64encode, b64decode
-
-
-# AES
-# key: 16, 24, 32 bytes
-# block: 16 bytes
-
-# padding
-pad = lambda s: s + (16 - len(s) % 16) * chr(16 - len(s) % 16)
-unpad = lambda s: s[:-ord(s[len(s) - 1:])]
-
-# encryption
-def encrypt(pt):
-    key = urandom(32)
-    iv = urandom(16)
-    aes = AES.new(key, AES.MODE_CBC, iv)
-    return key, b64encode(iv + aes.encrypt(pad(pt)))
-
-# decryption
-def decrypt(_ct, key):
-    ct = b64decode(_ct)
-    iv = ct[:16]
-    aes = AES.new(key, AES.MODE_CBC, iv)
-    return bytes.decode(unpad(aes.decrypt(ct[16:])))
-
-# SHA256
-# returns first 32 chars of hash as hex string
-def sha256(s):
-    m = hashlib.sha256()
-    m.update(bytes(str(s), encoding = 'utf-8'))
-    return m.hexdigest()[32:]
-
-# convert string to bits
-def str_to_bits(s):
-    res = ''
-    for x in [bin(byte)[2:] for byte in bytes(str(s), "utf-8")]:
-      res += x
-    return res
 
 # TODO
 # Basic hash-based digital signature
