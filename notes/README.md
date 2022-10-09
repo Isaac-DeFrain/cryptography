@@ -9,6 +9,7 @@ Notes on crypto concepts and algorithms
 
 ## Cryptography
 
+- [definitions](./definitions.md)
 - [symmetric crypto](./symmetric_crypto.md)
 - [public key crypto](./public_key_crypto.md)
 - [RSA](./rsa.md)
