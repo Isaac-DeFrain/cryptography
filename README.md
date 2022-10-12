@@ -1,3 +1,4 @@
-# Cryptography
+# 🔐 Cryptography
 
-[Notes](./notes/) and [algorithm examples](./src/)
+- 🗒 [Notes](./notes)
+- 🐍 [Python examples](./src/)

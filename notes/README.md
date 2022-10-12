@@ -1,13 +1,13 @@
-# Notes
+# 🗒 Notes
 
-Notes on crypto concepts and algorithms
+Notes on all things crypto
 
-## Group theory + number theory
+## ➗ Group theory + number theory
 
 - [modular arithmetic](./modular_arithmetic.md)
 - [generators](./generators.md)
 
-## Cryptography
+## 🔐 Cryptography
 
 - [definitions](./definitions.md)
 - [symmetric crypto](./symmetric_crypto.md)

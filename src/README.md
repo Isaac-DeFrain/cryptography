@@ -1,6 +1,6 @@
-# Python source code
+# 🐍 Python examples
 
-Python implementations of crytpo algorithms
+Python implementations of crytpo algorithms for educational purposes
 
 ⚠️ WARNING: This code is NOT meant to be used in production! ⚠️
 
