@@ -40,27 +40,28 @@ class Aes:
         decrypt = lambda ct: Aes.decrypt(ct, key)
         return key, encrypt, decrypt
 
-# SHA256
-# returns first min(n, 32) chars of hash as hex string if n != 0 else 32
-def sha256(s: str, *_n: int) -> str:
-    if len(_n) == 0 or _n[0] < 10_000: n = 10_000
-    else: n = _n[0]
-    import hashlib
-    m = hashlib.sha256()
-    m.update(s.encode('utf-8'))
-    if n == 0: return m.hexdigest()[32:]
-    else: sha256(m.hexdigest(), n - 1)
+class Hash:
+    # SHA256
+    # returns first min(n, 32) chars of hash as hex string if n != 0 else 32
+    def sha256(s: str, *_n: int) -> str:
+        if len(_n) == 0 or _n[0] < 10_000: n = 10_000
+        else: n = _n[0]
+        import hashlib
+        m = hashlib.sha256()
+        m.update(s.encode('utf-8'))
+        if n == 0: return m.hexdigest()[32:]
+        else: Hash.sha256(m.hexdigest(), n - 1)
 
-# SHA512
-# returns first min(n, 64) chars of hash as hex string if n != 0 else 64
-def sha512(s: str, *_n: int) -> str:
-    if len(_n) == 0 or _n[0] < 10_000: n = 10_000
-    else: n = _n[0]
-    import hashlib
-    m = hashlib.sha512()
-    m.update(s.encode('utf-8'))
-    if n == 0: return m.hexdigest()[64:]
-    else: sha512(m.hexdigest(), n - 1)
+    # SHA512
+    # returns first min(n, 64) chars of hash as hex string if n != 0 else 64
+    def sha512(s: str, *_n: int) -> str:
+        if len(_n) == 0 or _n[0] < 10_000: n = 10_000
+        else: n = _n[0]
+        import hashlib
+        m = hashlib.sha512()
+        m.update(s.encode('utf-8'))
+        if n == 0: return m.hexdigest()[64:]
+        else: Hash.sha512(m.hexdigest(), n - 1)
 
 class Bits:
     # convert string to bits
@@ -102,17 +103,23 @@ class Bits:
             acc.append(chk)
         return ''.join([chr(int(chk, 2)) for chk in acc])
 
-    # xor
-    # convert -> str -> bits
-    # xor corresponding bits
     def xor(a, b) -> str:
+        """bitwise xor"""
         _a, _b = str(a), str(b)
         _a, _b = Bits.str_to_bits(_a), Bits.str_to_bits(_b)
         bitxor = lambda x, y, i: str(int(x[i]) ^ int(y[i]))
         min_range = range(0, min(len(_a), len(_b)))
         return ''.join([bitxor(_a, _b, i) for i in min_range])
 
-class Rsa:
+class RsaTransformations:
+    """Rsa transformation functions"""
+
+    def trim(x: bytes) -> bytes:
+        while not x[0]:
+            x = x[1:]
+            if x == b'': break
+        return x
+
     def hex_int(c: str) -> int:
         return int(c, 16)
 
@@ -120,19 +127,19 @@ class Rsa:
         if n // 10: return chr(n + 87)
         else: return chr(n + 48)
 
-    # convert string to int
-    # first, the string is hexlified
-    # then, interpret the hex string as a base 16 number
-    def str_to_int(s: str) -> int:
-        return int(s.encode('utf-8').hex(), 16)
+    def bytes2int(bs: bytes) -> int:
+        """raw bytes to int"""
+        return int(bs.hex(), 16)
 
-    # undo conversion
-    def int_to_str(x: int) -> str:
+    def int2bytes(num: int) -> bytes:
+        """int to raw bytes"""
         res = ''
-        while x:
-            res += Rsa.int_hex(x % 16)
-            x = x // 16
-        return bytes.fromhex(res[::-1]).decode('utf-8')
+        while num:
+            res += RsaTransformations.int_hex(num % 16)
+            num = num // 16
+        if len(res) % 2: res += '0'
+        res = bytes.fromhex(res[::-1])
+        return res
 
 # ------------------
 # --- unit tests ---
@@ -155,7 +162,13 @@ for x in range(2):
         n = len(res) - 1
         assert(Bits.xor(x, y)[n] == '0' if x == y else Bits.xor(x, y)[n] == '1')
 
+# Hash tests
+
+# TODO
+
 # RSA tests
+
+Rsa = RsaTransformations
 
 hex_digits = '0123456789abcdef'
 assert(all([Rsa.hex_int(x) == i for i, x in enumerate(hex_digits)]))
@@ -164,11 +177,23 @@ assert(all([Rsa.int_hex(i) == x for i, x in enumerate(hex_digits)]))
 # 1000 random inverses
 for _ in range(1000):
     n = SystemRandom().randint(1, 100)
-    x = token_hex(n)
-    assert(Rsa.int_to_str(Rsa.str_to_int(x)) == x)
+    x = Rsa.trim(token_bytes(n))
+    x = b'\x01' if x == b'' else x
+    if Rsa.int2bytes(Rsa.bytes2int(x)) != x:
+        print(f'0: {x}\n\
+1: {Rsa.bytes2int(x)}\n\
+2: {Rsa.int2bytes(Rsa.bytes2int(x))}')
 
 # 1000 random inverses
 for _ in range(1000):
     n = SystemRandom().randint(1, 100)
     x = token_hex(n)
     assert(Bits.bits_to_str(Bits.str_to_bits(x)) == x)
+
+# 1000 random inverses
+for _ in range(1000):
+    n = SystemRandom().randint(1, 100)
+    x = token_hex(n)
+    f = lambda x: x.encode('utf-8').hex()
+    g = lambda x: bytes.fromhex(x).decode('utf-8')
+    assert(g(f(x)) == x)

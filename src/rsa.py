@@ -1,54 +1,73 @@
 # RSA
 
-from utils import *
-from math import log
-from modular import inverse
-from secrets import token_bytes, token_hex
+# influenced by https://github.com/sybrenstuvel/python-rsa
 
-# convert string to int
-def str_to_int(s: str) -> int:
-    n = 0
-    for c in s.encode('utf-8'):
-        n = 256 * n + c
-    return n
+import modular
+from utils import Rsa
+from secrets import SystemRandom, token_bytes
+from time import time
+from typing import Callable
 
-# undo conversion
-def int_to_str(x: int) -> str:
-    cs = []
-    while x:
-        cs.append(chr(x % 256))
-        x = x // 256
-    return ''.join(cs)[::-1]
+# TODO
+# PKCS1/PKCS8
+# X509 encoded key spec for storing keys on disk
 
-# p, q primes
-# generate key pair for modulus n = p * q
-def gen(p: int, q: int):
+class Key:
+    def retry_inverse(x: int, n: int) -> int:
+        """retry modular inverse until one is found"""
+        try:
+            return modular.inverse(x, n)
+        except ValueError:
+            Key.retry_inverse(x + 1, n)
+
+    def gen(p: int, q: int, *debug) -> 'tuple[int, int]':
+        """
+        generate key pair for modulus n = p * q, p, q primes
+        """
+        phi = (p - 1) * (q - 1)
+        sk = None
+        start = time()
+        while sk == None:
+            pk = SystemRandom().randint((p // 2) * (q // 2), phi - 1)
+            sk = Key.retry_inverse(pk, phi)
+        if debug != []: print(f'key gen time: {time() - start}')
+        return pk, sk
+
+def str2bytes(s: str) -> bytes:
+    return s.encode('utf-8')
+
+def bytes2str(bs: bytes) -> str:
+    return bs.decode('utf-8')
+
+def encrypt(p: int, q: int, pt: bytes, pk: int) -> bytes:
     n = p * q
-    pk = token_hex(int(log(n, 2)))
-    sk = inverse(str_to_int(pk), (p - 1) * (q - 1))
-    return pk.encode('utf-8'), str(sk).encode('utf-8')
+    # padded = pad(msg, keylength)
+    # payload = bytes2int(padded)
+    # e = encrypt(payload, )
+    m = Rsa.bytes2int(pt)
+    return Rsa.int2bytes(pow(m, pk, n))
 
-# encryption
-# pk is assumed to be utf-8 encoded
-def encrypt(p: int, q: int, pt: str, pk: bytes) -> bytes:
+def decrypt(p: int, q: int, ct: bytes, sk: int) -> bytes:
     n = p * q
-    msg = str_to_int(pt)
-    e = str_to_int(pk.decode('utf-8'))
-    return bytes(str(pow(msg, e, n)), 'utf-8')
+    c = Rsa.bytes2int(ct)
+    res = Rsa.int2bytes(pow(c, sk, n))
+    return res
 
-# decryption
-# sk is assumed to be utf-8 encoded
-def decrypt(p: int, q: int, ct: bytes, sk: bytes) -> str:
+def make(p: int, q: int, *debug) -> 'tuple[int, int, int, Callable[[], tuple[int, int]], Callable[[bytes], bytes], Callable[[bytes], str]]':
+    """
+    returns
+    - modulus
+    - pub key
+    - secret key
+    - RSA key pair generator
+    - encryption function
+    - decryption function
+    """
     n = p * q
-    _ct = int(ct.decode('utf-8'))
-    d = str_to_int(sk.decode('utf-8'))
-    return int_to_str(pow(_ct, d, n))
-
-# returns the modulus, pub key, secret key, key generator, encryption, and decryption functions
-def make(p: int, q: int):
-    n = p * q
-    pk, sk = gen(p, q)
-    g = lambda: gen(p, q)
+    print(f'mod: {n}')
+    print(f'bits: {n.bit_length()}')
+    pk, sk = Key.gen(p, q)
+    g = lambda: Key.gen(p, q, *debug)
     enc = lambda pt: encrypt(p, q, pt, pk)
     dec = lambda ct: decrypt(p, q, ct, sk)
     return n, pk, sk, g, enc, dec
@@ -57,11 +76,36 @@ def make(p: int, q: int):
 # --- unit tests ---
 # ------------------
 
-# 1000 random inverses
-for _ in range(1000):
-    x = token_hex(32)
-    assert(int_to_str(str_to_int(x)) == x)
+n, pk, sk, g, enc, dec = make(8683317618811886495518194401279999999, 43143988327398957279342419750374600193, [0])
 
-n, pk, sk, g, enc, dec = make(19, 23)
-print(enc('hello'))
-print(dec(enc('hello')))
+# 1000 random inverses
+a, b, c, d = 0, 0, 0, 0
+for i in range(1000):
+    n = SystemRandom().randint(1, 30)
+    x = Rsa.trim(token_bytes(n))
+    x = b'\x01' if x == b'' else x
+    try:
+        ee = enc(x)
+        dd = dec(ee)
+        if dd == x:
+            c += 1
+        else:
+            d += 1
+            print(f'Fail: {x}, {ee}, {dd}')
+    except UnicodeDecodeError: a += 1
+    except ValueError:
+        b += 1
+        print(f'ValueError: {x}')
+
+print(f'\
+# -------------------------------- #\n\
+# --- 1000 Random test results --- #\n\
+# -------------------------------- #\n\
+  UnicodeDecodeError: {a}\n\
+  ValueError:         {b}\n\
+  Incorrect:          {d}\n\
+  Correct:            {c}\n\
+# -------------------------------- #\n\
+  Total:              {a + b + c + d}')
+
+# print(enc('00'), dec(enc('00')))
