@@ -1,5 +1,6 @@
 #! /usr/bin python3
 
+from extended_euclidean_algorithm import EEA
 from typing import Callable
 
 # modular arithmetic
@@ -17,14 +18,14 @@ def is_unit(x: int, n: int) -> bool:
 def all_units(n: int):
     return list(filter(lambda x: is_unit(x, n), range(1, n)))
 
-# inverse of x modulo n
 def inverse(x: int, n: int) -> int:
-    res = None
-    for y in range(1, n):
-        if (x * y) % n == 1:
-            res = y
-            break
-    return res
+    """inverse of x modulo n"""
+
+    gcd, a, _ = EEA.eea(x, n)
+    if gcd != 1:
+        raise ValueError(f'{x} does not have an inverse mod {n}')
+    else:
+        return a % n
 
 # order of an element in Z/nZ
 def order(x: int, n: int) -> int:
