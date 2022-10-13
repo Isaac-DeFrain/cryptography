@@ -1,6 +1,5 @@
 # import binascii
 from base64 import b64encode, b64decode
-import enum
 
 # ASCII
 # 128 chars represented by 7 bits
@@ -33,8 +32,8 @@ def make_bit_chunk_list_var_len(s: str):
     return [f'{ord(i):b}' for i in s]
 
 # printable ascii chars are represented by <= 7 bits
+assert(all([x[0] == '0' for x in make_bit_chunk_list(printable)]))
 assert(all([len(x) <= 7 for x in make_bit_chunk_list_var_len(printable)]))
-
 
 # UTF-8
 # all unicode chars represented by 1-4 bytes
