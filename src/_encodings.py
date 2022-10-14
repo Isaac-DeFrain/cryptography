@@ -1,5 +1,9 @@
-# import binascii
+"""
+Encodings
+"""
+
 from base64 import b64encode, b64decode
+from secrets import SystemRandom, token_hex, token_bytes
 
 # ASCII
 # 128 chars represented by 7 bits
@@ -61,14 +65,14 @@ assert(len([chr(x) for x in '\u008000'.encode('utf-8')]) == 4)
 assert(len([chr(x) for x in '\u07FFFF'.encode('utf-8')]) == 4)
 assert(len([chr(x) for x in '\u080000'.encode('utf-8')]) == 5)
 
-_str = 'hello'
-encoded = _str.encode('utf-8')
-
-# each byte is converted into two hex digits
-assert(len(encoded.hex()) == 2 * len(_str))
-
-# encoded in order
-assert(all([x.encode('utf-8').hex() == encoded.hex()[2*i:2*i+2] for i, x in enumerate(_str)]))
+# 1000 random inverses
+for _ in range(1000):
+    n = SystemRandom().randint(1, 100)
+    x = token_hex(n)
+    f = lambda x: x.encode('utf-8')
+    g = lambda x: x.decode('utf-8')
+    assert(g(f(x)) == x)
+    assert(len(f(x).hex()) == 2 * len(x))
 
 # Base64
 
@@ -78,4 +82,13 @@ def b64_enc(s: str) -> str:
 def b64_dec(s: str) -> str:
     return str(b64decode(s), 'utf-8')
 
-assert(b64_dec(b64_enc('hello')) == 'hello')
+# 1000 random inverses
+for _ in range(1000):
+    n = SystemRandom().randint(1, 100)
+    x = token_hex(n)
+    assert(b64_dec(b64_enc(x)) == x)
+
+for _ in range(1000):
+    n = SystemRandom().randint(1, 100)
+    x = token_bytes(n)
+    assert(b64decode(b64encode(x)) == x)
