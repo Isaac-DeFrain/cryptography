@@ -1,3 +1,7 @@
+"""
+AES + Hash + Bits + RsaTransformations utils
+"""
+
 from Crypto.Cipher import AES
 from secrets import token_bytes, token_hex, SystemRandom
 from base64 import b64encode, b64decode
@@ -5,103 +9,81 @@ from typing import Callable
 
 # AES
 class Aes:
-    # key: 16, 24, 32 bytes
-    # block: 16 bytes
+    """AES symmetric key cryptosystem
 
-    # padding
-    pad = lambda s: s + (16 - len(s) % 16) * chr(16 - len(s) % 16)
-    unpad = lambda s: s[:-ord(s[len(s) - 1:])]
+    - block cipher: CBC mode
+    - key: 16, 24, 32 bytes
+    - block: 16 bytes
+    """
 
-    # generate key (default 32 bytes)
-    def gen(*n: int):
-        if len(n) == 0: return token_bytes(32)
-        else: return token_bytes(n[0])
+    def pad(s: str) -> str:
+        """Pad to length multiple of 16"""
+        return s + (16 - len(s) % 16) * chr(16 - len(s) % 16)
 
-    # encryption
+    def unpad(s: str) -> str:
+        """Drop the encoded number of chars"""
+        return s[:-ord(s[len(s) - 1:])]
+
+    def gen(n: int = 32) -> bytes:
+        """Generate AES key"""
+        return token_bytes(n)
+
     def encrypt(pt: str, key: bytes) -> bytes:
+        """AES encryption function"""
         iv = token_bytes(16)
         aes = AES.new(key, AES.MODE_CBC, iv)
         return b64encode(iv + aes.encrypt(Aes.pad(pt)))
 
-    # decryption
     def decrypt(_ct: bytes, key: bytes) -> str:
+        """AES decryption function"""
         ct = b64decode(_ct)
         iv = ct[:16]
         aes = AES.new(key, AES.MODE_CBC, iv)
         return bytes.decode(Aes.unpad(aes.decrypt(ct[16:])))
 
-    # make an encryption/decryption pair
-    # - from a generated key
-    # - from a supplied key
-    def make(*k: bytes) -> "tuple[bytes, Callable[[str], bytes], Callable[[bytes], str]]":
-        if len(k) == 0: key = Aes.gen()
-        else: key = k[0]
+    def make(key: bytes = gen()) -> "tuple[bytes, Callable[[str], bytes], Callable[[bytes], str]]":
+        """Make an encryption/decryption function pair from
+
+        - generated key (default)
+        - supplied key
+
+        Returns (`key`, `encrypt`, `decrypt`)
+        """
         encrypt = lambda pt: Aes.encrypt(pt, key)
         decrypt = lambda ct: Aes.decrypt(ct, key)
         return key, encrypt, decrypt
 
 class Hash:
-    # SHA256
-    # returns first min(n, 32) chars of hash as hex string if n != 0 else 32
-    def sha256(s: str, *_n: int) -> str:
-        if len(_n) == 0 or _n[0] < 10_000: n = 10_000
-        else: n = _n[0]
-        import hashlib
-        m = hashlib.sha256()
-        m.update(s.encode('utf-8'))
-        if n == 0: return m.hexdigest()[32:]
-        else: Hash.sha256(m.hexdigest(), n - 1)
+    """sha256 + sha512 hash functions"""
 
-    # SHA512
-    # returns first min(n, 64) chars of hash as hex string if n != 0 else 64
-    def sha512(s: str, *_n: int) -> str:
-        if len(_n) == 0 or _n[0] < 10_000: n = 10_000
-        else: n = _n[0]
-        import hashlib
-        m = hashlib.sha512()
+    import hashlib
+
+    def sha256(s: bytes, n: int = 10_000) -> bytes:
+        """sha256 hash function
+
+        returns 32 bytes
+        """
+        if n < 10_000: n = 10_000
+        m = Hash.hashlib.sha256()
         m.update(s.encode('utf-8'))
-        if n == 0: return m.hexdigest()[64:]
-        else: Hash.sha512(m.hexdigest(), n - 1)
+        return m.digest()[32:]
+
+    def sha512(s: str, n: int = 10_000) -> bytes:
+        """sha512 hash function
+
+        returns 64 bytes
+        """
+        if n < 10_000: n = 10_000
+        m = Hash.hashlib.sha512()
+        m.update(s.encode('utf-8'))
+        return m.hexdigest()[128:]
 
 class Bits:
-    # convert string to bits
-    def str_to_bits(s: str) -> str:
-        return ''.join([f'{byte:08b}' for byte in s.encode('utf-8')])
+    """Bit and byte manipulations"""
 
-    # undo the conversion
-    def bits_to_str(b: str) -> str:
-        group = False
-        count = 0
-        max_count = 1
-        rem = b
-        acc = []
-        while rem:
-            chk = rem[:8]
-            rem = rem[8:]
-            count += 1
-            if chk[0] == '0': group = False
-            if chk[:3] == '110':
-                group = True
-                max_count = 2
-            elif chk[:4] == '1110':
-                group = True
-                max_count = 3
-            elif chk[:5] == '11110':
-                group = True
-                max_count = 4
-                print(max_count)
-            while group:
-                if count > max_count: raise ValueError('UTF8 only has byte groups up to length 4')
-                elif chk[:2] == '10':
-                    group = True
-                    count += 1
-                    chk += rem[:8]
-                    rem = rem[8:]
-                else:
-                    group = False
-                    count = 0
-            acc.append(chk)
-        return ''.join([chr(int(chk, 2)) for chk in acc])
+    def str_to_bits(s: str) -> str:
+        """convert string to bits"""
+        return ''.join([f'{byte:08b}' for byte in s.encode('utf-8')])
 
     def xor(a, b) -> str:
         """bitwise xor"""
@@ -112,27 +94,31 @@ class Bits:
         return ''.join([bitxor(_a, _b, i) for i in min_range])
 
 class RsaTransformations:
-    """Rsa transformation functions"""
+    """RSA transformation functions"""
 
     def trim(x: bytes) -> bytes:
-        while not x[0]:
+        """Drop the leading `\\x00` bytes"""
+        while x and not x[0]:
             x = x[1:]
-            if x == b'': break
         return x
 
     def hex_int(c: str) -> int:
+        """Corresponding hex number"""
+        if n < 0 or n > 15: raise ValueError('Invalid hex digit')
         return int(c, 16)
 
     def int_hex(n: int) -> str:
+        """Corresponding hex digit"""
+        if n < 0 or n > 15: raise ValueError('Invalid hex number')
         if n // 10: return chr(n + 87)
         else: return chr(n + 48)
 
     def bytes2int(bs: bytes) -> int:
-        """raw bytes to int"""
+        """bytes to int"""
         return int(bs.hex(), 16)
 
     def int2bytes(num: int) -> bytes:
-        """int to raw bytes"""
+        """int to bytes"""
         res = ''
         while num:
             res += RsaTransformations.int_hex(num % 16)
@@ -164,7 +150,11 @@ for x in range(2):
 
 # Hash tests
 
-# TODO
+for _ in range(100):
+    n = SystemRandom().randint(2, 100)
+    s = token_hex(n)
+    assert(Hash.sha256(s) == Hash.sha256(s))
+    print(len(Hash.sha256(s)), Hash.sha256(s))
 
 # RSA tests
 
@@ -183,17 +173,3 @@ for _ in range(1000):
         print(f'0: {x}\n\
 1: {Rsa.bytes2int(x)}\n\
 2: {Rsa.int2bytes(Rsa.bytes2int(x))}')
-
-# 1000 random inverses
-for _ in range(1000):
-    n = SystemRandom().randint(1, 100)
-    x = token_hex(n)
-    assert(Bits.bits_to_str(Bits.str_to_bits(x)) == x)
-
-# 1000 random inverses
-for _ in range(1000):
-    n = SystemRandom().randint(1, 100)
-    x = token_hex(n)
-    f = lambda x: x.encode('utf-8').hex()
-    g = lambda x: bytes.fromhex(x).decode('utf-8')
-    assert(g(f(x)) == x)
