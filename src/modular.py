@@ -1,25 +1,29 @@
 #! /usr/bin python3
 
+"""
+Modular arithmetic
+"""
+
 from extended_euclidean_algorithm import EEA
 from typing import Callable
 
-# modular arithmetic
-
-# check if x is a unit in Z/nZ
 def is_unit(x: int, n: int) -> bool:
+    """Check if x is a unit in Z/nZ"""
+
     res = False
-    for y in range(1, n):
-        if (x * y) % n == 1:
-            res = True
-            break
+    y = 1
+    while not res and y < n:
+        y += 1
+        if (x * y) % n == 1: res = True
     return res
 
-# list of all units of Z/nZ
 def all_units(n: int):
+    """List of units all units of Z/nZ"""
+
     return list(filter(lambda x: is_unit(x, n), range(1, n)))
 
 def inverse(x: int, n: int) -> int:
-    """inverse of x modulo n"""
+    """Inverse of x modulo n using extended Euclidean algorithm"""
 
     gcd, a, _ = EEA.eea(x, n)
     if gcd != 1:
