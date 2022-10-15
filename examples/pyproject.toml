@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "examples"
+version = "0.1.0"
+description = "Examples of cryptographic primitives"
+authors = ["Isaac-DeFrain <isaacdefrain@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "rsa"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+rsa = {path = "rsa"}
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.1.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
