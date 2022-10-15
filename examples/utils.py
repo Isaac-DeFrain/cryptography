@@ -53,31 +53,6 @@ class Aes:
         decrypt = lambda ct: Aes.decrypt(ct, key)
         return key, encrypt, decrypt
 
-class Hash:
-    """sha256 + sha512 hash functions"""
-
-    import hashlib
-
-    def sha256(s: bytes, n: int = 10_000) -> bytes:
-        """sha256 hash function
-
-        returns 32 bytes
-        """
-        if n < 10_000: n = 10_000
-        m = Hash.hashlib.sha256()
-        m.update(s.encode('utf-8'))
-        return m.digest()[32:]
-
-    def sha512(s: str, n: int = 10_000) -> bytes:
-        """sha512 hash function
-
-        returns 64 bytes
-        """
-        if n < 10_000: n = 10_000
-        m = Hash.hashlib.sha512()
-        m.update(s.encode('utf-8'))
-        return m.hexdigest()[128:]
-
 class Bits:
     """Bit and byte manipulations"""
 
@@ -92,40 +67,6 @@ class Bits:
         bitxor = lambda x, y, i: str(int(x[i]) ^ int(y[i]))
         min_range = range(0, min(len(_a), len(_b)))
         return ''.join([bitxor(_a, _b, i) for i in min_range])
-
-class RsaTransformations:
-    """RSA transformation functions"""
-
-    def trim(x: bytes) -> bytes:
-        """Drop the leading `\\x00` bytes"""
-        while x and not x[0]:
-            x = x[1:]
-        return x
-
-    def hex_int(c: str) -> int:
-        """Corresponding hex number"""
-        if n < 0 or n > 15: raise ValueError('Invalid hex digit')
-        return int(c, 16)
-
-    def int_hex(n: int) -> str:
-        """Corresponding hex digit"""
-        if n < 0 or n > 15: raise ValueError('Invalid hex number')
-        if n // 10: return chr(n + 87)
-        else: return chr(n + 48)
-
-    def bytes2int(bs: bytes) -> int:
-        """bytes to int"""
-        return int(bs.hex(), 16)
-
-    def int2bytes(num: int) -> bytes:
-        """int to bytes"""
-        res = ''
-        while num:
-            res += RsaTransformations.int_hex(num % 16)
-            num = num // 16
-        if len(res) % 2: res += '0'
-        res = bytes.fromhex(res[::-1])
-        return res
 
 # ------------------
 # --- unit tests ---
@@ -155,21 +96,3 @@ for _ in range(100):
     s = token_hex(n)
     assert(Hash.sha256(s) == Hash.sha256(s))
     print(len(Hash.sha256(s)), Hash.sha256(s))
-
-# RSA tests
-
-Rsa = RsaTransformations
-
-hex_digits = '0123456789abcdef'
-assert(all([Rsa.hex_int(x) == i for i, x in enumerate(hex_digits)]))
-assert(all([Rsa.int_hex(i) == x for i, x in enumerate(hex_digits)]))
-
-# 1000 random inverses
-for _ in range(1000):
-    n = SystemRandom().randint(1, 100)
-    x = Rsa.trim(token_bytes(n))
-    x = b'\x01' if x == b'' else x
-    if Rsa.int2bytes(Rsa.bytes2int(x)) != x:
-        print(f'0: {x}\n\
-1: {Rsa.bytes2int(x)}\n\
-2: {Rsa.int2bytes(Rsa.bytes2int(x))}')

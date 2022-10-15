@@ -1,6 +1,6 @@
 #! /usr/bin python3
 
-import random
+from secrets import SystemRandom
 
 # check if g is a generator of 𝐙/n𝐙
 def is_generator(g, n):
@@ -29,7 +29,7 @@ def random_gen(n):
     gens = generators(n)
     if not gens: return None
     else:
-      i = random.randint(0, len(gens) - 1)
+      i = SystemRandom().randint(0, len(gens) - 1)
       return gens[i]
 
 # compute the discrete log, if it exists

@@ -2,10 +2,10 @@
 
 from getpass import getpass
 from hashlib import pbkdf2_hmac
-from os import urandom
+from secrets import token_bytes
 
 # always salt your hash
-salt = urandom(32)
+salt = token_bytes(32)
 hash = lambda x: pbkdf2_hmac('sha256', x, salt, 100_000)
 
 # get a confirmed password within 5 attempts

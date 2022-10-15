@@ -1,4 +1,6 @@
-#! /usr/bin python3
+"""
+Extended Euclidean Algorithm
+"""
 
 class EEA:
     def sgn(x: int) -> int:
