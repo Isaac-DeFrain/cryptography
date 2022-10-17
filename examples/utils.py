@@ -53,21 +53,6 @@ class Aes:
         decrypt = lambda ct: Aes.decrypt(ct, key)
         return key, encrypt, decrypt
 
-class Bits:
-    """Bit and byte manipulations"""
-
-    def str_to_bits(s: str) -> str:
-        """convert string to bits"""
-        return ''.join([f'{byte:08b}' for byte in s.encode('utf-8')])
-
-    def xor(a, b) -> str:
-        """bitwise xor"""
-        _a, _b = str(a), str(b)
-        _a, _b = Bits.str_to_bits(_a), Bits.str_to_bits(_b)
-        bitxor = lambda x, y, i: str(int(x[i]) ^ int(y[i]))
-        min_range = range(0, min(len(_a), len(_b)))
-        return ''.join([bitxor(_a, _b, i) for i in min_range])
-
 # ------------------
 # --- unit tests ---
 # ------------------
@@ -80,19 +65,3 @@ for _ in range(1000):
     n = SystemRandom().randint(1, 100)
     x = token_hex(n)
     assert(dec(enc(x)) == x)
-
-# Bits tests
-
-for x in range(2):
-    for y in range(2):
-        res = Bits.xor(x, y)
-        n = len(res) - 1
-        assert(Bits.xor(x, y)[n] == '0' if x == y else Bits.xor(x, y)[n] == '1')
-
-# Hash tests
-
-for _ in range(100):
-    n = SystemRandom().randint(2, 100)
-    s = token_hex(n)
-    assert(Hash.sha256(s) == Hash.sha256(s))
-    print(len(Hash.sha256(s)), Hash.sha256(s))
