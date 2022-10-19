@@ -51,8 +51,10 @@ Common terms used in cryptography
   - used to make attestations about public key relationships, typically in the form of a *signature*
 
 - **Hash function**
+<!-- TODO -->
 
 - **Collision-resistance**
+- <!-- TODO -->
 
 - **Commutative En-/Decryption**
   - ECC is based on commutative algebraic structures
