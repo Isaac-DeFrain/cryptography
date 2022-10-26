@@ -1,12 +1,11 @@
 __pycache__
 .pytest_cache
-
 .venv
+.vscode
 
 build/
 dist/
 *.egg-info
 
 notes/book/*
-settings.json
 *index.html

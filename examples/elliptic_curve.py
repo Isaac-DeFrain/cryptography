@@ -9,14 +9,17 @@ from modular import inverse
 from typing import Annotated
 
 class Point:
-    """Point on an elliptic curve"""
-
+    """
+    Point on an elliptic curve
+    """
     def __init__(self, x: int, y: int):
         self.x = x
         self.y = y
 
 class Weierstrass:
-    """Weierstrass form of an elliptic curve"""
+    """
+    Weierstrass form of an elliptic curve
+    """
 
     # --------------------
     # --- type aliases ---
@@ -60,17 +63,18 @@ class Weierstrass:
         Inefficient implementation: use only on small fields
         """
         a, b, n = self.weierstrass
-        pts = [(-1, -1)]
+        pts = [Point(-1, -1)]
         for x in range(0, n):
             for y in range(0, n):
-                p = x, y
-                if Weierstrass.check(self, p): pts.append(p)
+                p = Point(x, y)
+                if Weierstrass.check(self, p):
+                    pts.append(p)
         if debug:
             print('+-----------------------------------------------')
             print(f'+ Points of y^2 = x^3 + {a}x + {b} (mod {n})')
             print('+-----------------------------------------------')
             print(f'+ {pts.__len__()} points over Z/{n}Z')
-        return sorted(pts)
+        return pts # TODO sort
 
     def points_n(self, k: int, lower: int = 0, *upper) -> list[Point]:
         """Find k points on the curve given `lower` and/or `upper` bound(s)
@@ -78,13 +82,13 @@ class Weierstrass:
         Includes the point at infinity, represented by (-1, -1)
         """
         _, _, n = self.weierstrass
-        pts = [(-1, -1)]
+        pts = [Point(-1, -1)]
         upper = upper[0] if upper else n
         lower = lower
         count = 0
         while count < k and lower < upper:
             for y in range(lower, upper):
-                p = lower, y
+                p = Point(lower, y)
                 if Weierstrass.check(self, p):
                     count += 1
                     pts.append(p)
@@ -96,10 +100,10 @@ class Weierstrass:
 
         a, _, n = self.weierstrass
         # coordinates
-        x1, y1 = p
-        x2, y2 = q
+        x1, y1 = p.x, p.y
+        x2, y2 = q.x, q.y
         # identity and inverse rules
-        if x1 == x2 and y1 == -y2: return (-1, -1)
+        if x1 == x2 and y1 == -y2: return Point(-1, -1)
         if p == (-1, -1): return q
         if q == (-1, -1): return p
         # otherwise
@@ -109,7 +113,7 @@ class Weierstrass:
         y3 = (lam * (x1 - x3) - y1) % n
         return Point(x3, y3)
 
-    def safe_add(self, p: Point, q: Point) -> Point:
+    def safe_add(self, p: Point, q: Point) -> 'Point | None':
         """
         Check that the points are on the curve before adding
         """
@@ -121,7 +125,7 @@ class Weierstrass:
     def scalar_mult(self, k: int, p: Point) -> Point:
         """Scalar multiplication"""
 
-        if k == 0: return (-1, -1)
+        if k == 0: return Point(-1, -1)
         if k == 1: return p
         if k > 1:
             add = Weierstrass.add
@@ -147,22 +151,22 @@ class Montgomery:
 
         _, _, n = self.montgomery
         # TODO
-        return p.y ** 2 % n == Weierstrass.f(self, p.x)
+        return p.y ** 2 % n == self.f(p.x)
 
     def points_n(self, k: int, lower: int = 0, *upper) -> list[Point]:
         """Find k points on the curve given `lower` and/or `upper` bound(s)
 
         Includes the point at infinity, represented by (-1, -1)
         """
-        _, _, n = self.weierstrass
-        pts = [(-1, -1)]
+        _, _, n = self.montgomery
+        pts = [Point(-1, -1)]
         upper = upper[0] if upper else n
         lower = lower
         count = 0
         while count < k and lower < upper:
             for y in range(lower, upper):
-                p = lower, y
-                if Weierstrass.check(self, p):
+                p = Point(lower, y)
+                if self.check(p):
                     count += 1
                     pts.append(p)
             lower += 1
