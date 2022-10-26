@@ -85,7 +85,8 @@ class Modular:
         """
         gcd, a, _ = self.eea(x, n)
         if gcd != 1:
-            raise ValueError(f'{x} does not have an inverse mod {n}')
+            print(f'{x} does not have an inverse mod {n}')
+            return 0
         else:
             return a % n
 

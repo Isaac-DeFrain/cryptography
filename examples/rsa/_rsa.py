@@ -5,7 +5,7 @@
 from time import time
 from secrets import SystemRandom
 from base64 import b64encode, b64decode
-from utils import RsaTransformations as Rsa, Modular
+from utils import RsaTransformations as Rsa, Modular, Prime
 
 # TODO
 # PKCS1/PKCS8
@@ -16,16 +16,24 @@ class Cipher:
     RSA cryptosystem
     """
 
+    def __default(self, k, dict):
+        try:
+            return dict[k]
+        except KeyError:
+            return None
+
     def __init__(self, **primes):
-        # TODO
-        if primes['digits']:
-            # generate random primes of size `primes['digits']` +- 5%
-            ()
+        if self.__default('digits', primes):
+            n = primes['digits']
+            p = Prime(n)
+            q = Prime(n)
+            self.p = p.p
+            self.q = q.p
+            self.n = p.p * q.p
         else:
-            p, q = primes['p'], primes['q']
-            self.p = p
-            self.q = q
-            self.n = p * q
+            self.p = primes['p']
+            self.q = primes['q']
+            self.n = primes['p'] * primes['q']
 
     def encrypt(self, pt: bytes, pk: bytes) -> bytes:
         """RSA encryption function
@@ -34,9 +42,9 @@ class Cipher:
         - `pk`: base64 endocded
         """
         n = self.n
-        m = Rsa.bytes2int(pt)
-        e = Rsa.bytes2int(b64decode(pk))
-        return Rsa.int2bytes(pow(m, e, n))
+        m = Rsa().bytes2int(pt)
+        e = Rsa().bytes2int(b64decode(pk))
+        return Rsa().int2bytes(pow(m, e, n))
 
     def decrypt(self, ct: bytes, sk: bytes) -> bytes:
         """RSA decryption function
@@ -45,23 +53,25 @@ class Cipher:
         - `sk`: base64 endocded
         """
         n = self.n
-        c = Rsa.bytes2int(ct)
-        d = Rsa.bytes2int(b64decode(sk))
-        return Rsa.int2bytes(pow(c, d, n))
+        c = Rsa().bytes2int(ct)
+        d = Rsa().bytes2int(b64decode(sk))
+        return Rsa().int2bytes(pow(c, d, n))
 
     class Key:
         """
         RSA key pair generator
         """
 
-        def try_inverse(self, x: int, n: int) -> int:
+        def try_inverse(self, x: int, n: int) -> 'int | None':
             """
             Retry modular inverse until one is found or n is exceeded
             """
-            if x > n: raise ValueError(f'reduce {x} modulo {n}')
-            if x == n: raise ValueError(f'no inverse found')
+            if x > n:
+                raise ValueError(f'reduce {x} modulo {n}')
+            if x == n:
+                raise ValueError(f'no inverse found')
             try:
-                return Modular.inverse(x, n)
+                return Modular().inverse(x, n)
             except ValueError:
                 self.try_inverse(x + 1, n)
 
@@ -72,6 +82,7 @@ class Cipher:
             Base64 encoded keys
             """
             phi = (p - 1) * (q - 1)
+            pk = 0
             sk = None
             start = time()
             while sk == None:
@@ -80,8 +91,8 @@ class Cipher:
             if debug:
                 print(f'key gen time: {time() - start}')
                 print(f'modulus: {p * q}')
-            self.pk = b64encode(Rsa.int2bytes(pk))
-            self.sk = b64encode(Rsa.int2bytes(sk))
+            self.pk = b64encode(Rsa().int2bytes(pk))
+            self.sk = b64encode(Rsa().int2bytes(sk))
 
         def __init__(self, p: int, q: int, *debug):
             self.gen(p, q, *debug)
