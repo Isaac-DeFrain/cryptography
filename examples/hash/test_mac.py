@@ -3,7 +3,7 @@ HMAC unit tests
 """
 
 import unittest
-from examples.hash.mac import SHA256, SHA512
+from _mac import SHA256, SHA512
 from secrets import SystemRandom, token_hex
 
 class TestHmac256(unittest.TestCase):

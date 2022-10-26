@@ -2,7 +2,7 @@
 Hash-based Message Authentication Codes
 """
 
-from bits.bits import xor
+from bits import xor
 from hashlib import sha256, sha512
 from secrets import token_hex
 from typing import Union
