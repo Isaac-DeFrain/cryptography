@@ -4,18 +4,18 @@
 
 ## Hard problems
 
-### SIS
+### Short Integer Solution (SIS) problem
 
 Find  `z \in {-1, 0, 1}^m` such that
 
 ```
-Az = 0 in (Z/qZ)^n
+Az = 0 in (ℤ/qℤ)^n
 ```
 
 #### Collision-resistant hash function
 
 ```
-A \in {0, 1}^m -> (Z/qZ)^n
+A \in {0, 1}^m -> (ℤ/qℤ)^n
 f(x) = Ax
 ```
 
@@ -28,7 +28,7 @@ f(x) = Ax
 
 ### Learning with errors (LWE)
 
-Find secret `s \in (Z/qZ)^n` given many 'noisy' inner products
+Find secret `s \in (ℤ/qℤ)^n` given many 'noisy' inner products
 
 LWE is versatile
 
@@ -54,7 +54,7 @@ Kinds of crypto LWE can do
 
 ```
     Alice                        Bob
-  r <- Z^m                     s <- Z^m
+  r <- ℤ^m                     s <- ℤ^m
   u ~ r^t A --------------------->
       <------------------------ v ~ As
   r^tv ~ r^t As               us ~ r^t As
