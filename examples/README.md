@@ -10,3 +10,12 @@ Python implementations of crytpo algorithms for educational purposes
 - [Elliptic curves](./elliptic_curve.py)
 - [Digital signatures](./digital_signatures.py)
 - [Passwords](./password.py)
+
+## Run the tests
+
+Install `pytest` and run
+
+```
+pip install pytest
+pytest
+```
