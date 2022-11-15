@@ -1,5 +1,3 @@
-#! /usr/bin python3
-
 from secrets import SystemRandom
 
 # check if g is a generator of 𝐙/n𝐙

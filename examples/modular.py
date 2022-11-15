@@ -5,7 +5,9 @@ Modular arithmetic
 from extended_euclidean_algorithm import *
 
 class Mod:
-    """Modular arithmetic funcions"""
+    """
+    Modular arithmetic functions
+    """
 
     def __init__(self, n: int):
         """

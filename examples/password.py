@@ -1,5 +1,3 @@
-#!/usr/bin python3
-
 from getpass import getpass
 from hashlib import pbkdf2_hmac
 from secrets import token_bytes
@@ -11,8 +9,8 @@ hash = lambda x: pbkdf2_hmac('sha256', x, salt, 100_000)
 # get a confirmed password within 5 attempts
 attempts = 5
 while attempts >= 0:
-    p = hash(bytes(getpass('Password: '), 'utf-8'))
-    q = hash(bytes(getpass('Confirm: '), 'utf-8'))
+    p = hash(getpass('Password: ').encode('utf-8'))
+    q = hash(getpass('Confirm: ').encode('utf-8'))
     if p != q:
         if attempts == 1:
             print('Password mismatch. Try again. You have %s remaining attempt.' % attempts)
@@ -26,4 +24,4 @@ while attempts >= 0:
         break
 
 def guess():
-    return p == hash(bytes(getpass('Guess: '), 'utf-8'))
+    return p == hash(getpass('Guess: ').encode('utf-8'))
