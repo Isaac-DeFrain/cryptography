@@ -5,7 +5,7 @@ Elliptic curves
 - Montgomery form
 """
 
-from modular import inverse
+from modular import Mod
 from typing import Annotated, Union
 
 class Point:
@@ -40,20 +40,20 @@ class Weierstrass:
         """
         Initialize a Weierstrass curve
         """
-        self.weierstrass = a, b, n
+        self.form = a, b, n
 
     def f(self, x: int):
         """
         Compute right side of Weierstrass equation
         """
-        a, b, n = self.weierstrass
+        a, b, n = self.form
         return (x ** 3 + a * x + b) % n
 
     def check(self, p: Point) -> bool:
         """
         Check that `p` is a point on the curve
         """
-        _, _, n = self.weierstrass
+        _, _, n = self.form
         return p.y ** 2 % n == self.f(p.x)
 
     def points(self, *debug) -> list[Point]:
@@ -67,7 +67,7 @@ class Weierstrass:
 
         Inefficient implementation: use only on small fields
         """
-        a, b, n = self.weierstrass
+        a, b, n = self.form
         pts = [Point(-1, -1)]
         for x in range(0, n):
             for y in range(0, n):
@@ -87,7 +87,7 @@ class Weierstrass:
 
         Includes the point at infinity, represented by (-1, -1)
         """
-        _, _, n = self.weierstrass
+        _, _, n = self.form
         pts = [Point(-1, -1)]
         upper = upper[0] if upper else n
         lower = lower
@@ -105,7 +105,7 @@ class Weierstrass:
         """
         Elliptic curve point addition (Weierstrass form)
         """
-        a, _, n = self.weierstrass
+        a, _, n = self.form
         # coordinates
         x1, y1 = p.x, p.y
         x2, y2 = q.x, q.y
@@ -114,8 +114,9 @@ class Weierstrass:
         if p == Point(-1, -1): return q
         if q == Point(-1, -1): return p
         # otherwise
-        lam = ((3 * x1 ** 2 + a) * inverse(2 * y1, n)
-            if p == q else (y2 - y1) * inverse(x2 - x1, n))
+        mod = Mod(n)
+        lam = ((3 * x1 ** 2 + a) * mod.inverse(2 * y1)
+            if p == q else (y2 - y1) * mod.inverse(x2 - x1))
         x3 = (lam ** 2 - x1 - x2) % n
         y3 = (lam * (x1 - x3) - y1) % n
         return Point(x3, y3)
@@ -162,20 +163,20 @@ class Montgomery:
         """
         Initialize a new Montgomery
         """
-        self.montgomery = a, b, n
+        self.form = a, b, n
 
     def f(self, x: int) -> int:
         """
         Compute right side of Montgomery equation
         """
-        a, _, n = self.montgomery
+        a, _, n = self.form
         return (x ** 3 + a * x ** 2 + x) % n
 
     def check(self, p: Point) -> bool:
         """
         Check that `p` is a point on the curve
         """
-        _, b, n = self.montgomery
+        _, b, n = self.form
         return b * p.y ** 2 % n == self.f(p.x)
 
     def points(self, *debug) -> list[Point]:
@@ -189,7 +190,7 @@ class Montgomery:
 
         Inefficient implementation: use only on small fields
         """
-        a, b, n = self.montgomery
+        a, b, n = self.form
         pts = [Point(-1, -1)]
         for x in range(0, n):
             for y in range(0, n):
@@ -209,7 +210,7 @@ class Montgomery:
 
         Includes the point at infinity, represented by (-1, -1)
         """
-        _, _, n = self.montgomery
+        _, _, n = self.form
         pts = [Point(-1, -1)]
         upper = upper[0] if upper else n
         lower = lower
@@ -227,7 +228,7 @@ class Montgomery:
         """
         Elliptic curve point addition (Montgomery form)
         """
-        a, b, n = self.montgomery
+        a, b, n = self.form
         # coordinates
         x1, y1 = p.x, p.y
         x2, y2 = q.x, q.y
@@ -236,12 +237,13 @@ class Montgomery:
         if p == Point(-1, -1): return q
         if q == Point(-1, -1): return p
         # otherwise
-        m = (y2 - y1) * inverse(x2 - x1, n) % n
+        mod = Mod(n)
+        m = (y2 - y1) * mod.inverse(x2 - x1) % n
         if p != q:
             x3 = (b * m ** 2 - a - x1 - x2) % n
             y3 = (m * (2 * x1 + x2 + a) - b * m ** 3 - y1) % n
         else:
-            l = (3 * x1 ** 2 + 2 * a * x1 + 1) * inverse(2 * b * y1, n) % n
+            l = (3 * x1 ** 2 + 2 * a * x1 + 1) * mod.inverse(2 * b * y1) % n
             x3 = (b * l ** 2 - a - 2 * x1) % n
             y3 = ((3 * x1 + a) * l - b * l ** 3 - y1) % n
         return Point(x3, y3)
